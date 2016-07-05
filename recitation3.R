@@ -1,0 +1,42 @@
+setwd("/media/mic0331/Data/Data Analysis/Courses/Edx/MITx: 15.071x The Analytics Edge")
+polling <- read.csv('./dataset/PollingData_Imputed.csv')
+str(polling)
+table(polling$Year)
+summary(polling)
+install.packages("mice")
+library("mice")
+simple = polling[c("Rasmussen", "SurveyUSA", "PropR", "DiffCount")]
+summary(simple)
+set.seed(144)
+imputed = complete(mice(simple))
+summary(imputed)
+polling$Rasmussen = imputed$Rasmussen
+polling$SurveyUSA = imputed$SurveyUSA
+summary(polling)
+
+train = subset(polling, Year == 2004 | Year == 2008)
+test = subset(polling, Year == 2012)
+table(train$Republican)
+sign(20)
+sign(-10)
+sign(0)
+table(sign(train$Rasmussen))
+table(train$Republican, sign(train$Rasmussen))
+
+cor(train)
+str(train)
+cor(train[c("Rasmussen", "SurveyUSA", "PropR", "DiffCount", "Republican")])
+mod1 <- glm(Republican ~ PropR, data = train, family="binomial")
+summary(mod1)
+pred1 <- predict(mod1, type = "response")
+table(train$Republican, pred1 >= .5)
+mod2 <- glm(Republican ~ SurveyUSA+DiffCount, data = train, family="binomial")
+pred2 <- predict(mod2, type="response")
+table(train$Republican, pred2 >= .5)
+summary(mod2)
+
+table(test$Republican, sign(test$Rasmussen))
+testPrediction = predict(mod2, newdata = test, type="response")
+table(test$Republican, testPrediction >= .5)
+subset(test, testPrediction >= .5 & Republican == 0)
+
